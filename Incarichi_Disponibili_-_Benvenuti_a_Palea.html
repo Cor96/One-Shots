@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Incarichi Disponibili — Palea</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #7a6030;
+    --bg: #0a0806;
+    --bg2: #110e09;
+    --bg-card: #13100a;
+    --text: #d4c5a0;
+    --text-dim: #8a7d62;
+    --red: #8b2020;
+    --red-glow: #c0392b;
+    --c1: #4a90c4; /* Tiro */
+    --c2: #c0392b; /* Competente */
+    --c3: #8b5cf6; /* Scheda */
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'EB Garamond', serif;
+    font-size: 17px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    text-align: center;
+    padding: 70px 20px 50px;
+    background: radial-gradient(ellipse at 50% 0%, #2a1a05 0%, transparent 70%);
+  }
+
+  .header-ornament {
+    font-size: 2rem;
+    color: var(--gold-dim);
+    letter-spacing: .5rem;
+    margin-bottom: 12px;
+    animation: flicker 6s infinite;
+  }
+
+  h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.6rem, 5vw, 3rem);
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(201,168,76,.5), 0 0 60px rgba(201,168,76,.2);
+    letter-spacing: .05em;
+    line-height: 1.3;
+  }
+
+  .subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    color: var(--gold-dim);
+    letter-spacing: .3em;
+    margin-top: 14px;
+    text-transform: uppercase;
+  }
+
+  .header-line {
+    width: 260px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 24px auto 0;
+  }
+
+  /* ── GRID ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 28px;
+    padding: 40px clamp(16px, 5vw, 60px) 80px;
+    max-width: 1280px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid #2a2218;
+    border-radius: 3px;
+    padding: 28px 26px 24px;
+    position: relative;
+    cursor: pointer;
+    transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .35s;
+    overflow: hidden;
+  }
+
+  /* Corner ornaments */
+  .card::before, .card::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    border-color: var(--gold-dim);
+    border-style: solid;
+    opacity: .5;
+    transition: opacity .35s;
+  }
+  .card::before { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
+  .card::after  { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
+
+  .card:hover {
+    transform: translateY(-6px);
+    border-color: var(--gold-dim);
+    box-shadow: 0 16px 48px rgba(0,0,0,.7), 0 0 30px rgba(201,168,76,.08);
+  }
+  .card:hover::before, .card:hover::after { opacity: 1; }
+
+  /* Glow bar on hover — color by tier */
+  .card::after {
+    bottom: 8px; right: 8px;
+  }
+  .card-glow {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--tier-color, var(--gold)), transparent);
+    opacity: 0;
+    transition: opacity .35s;
+  }
+  .card:hover .card-glow { opacity: 1; }
+
+  .card[data-tier="0"] { --tier-color: var(--c1); }
+  .card[data-tier="1"] { --tier-color: var(--c2); }
+  .card[data-tier="2"] { --tier-color: var(--c3); }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Cinzel', serif;
+    font-size: .72rem;
+    letter-spacing: .08em;
+    padding: 4px 11px;
+    border-radius: 2px;
+    border: 1px solid;
+    margin-bottom: 18px;
+  }
+  .badge.t0 { color: var(--c1); border-color: var(--c1); background: rgba(74,144,196,.08); }
+  .badge.t1 { color: var(--c2); border-color: var(--c2); background: rgba(192,57,43,.08); }
+  .badge.t2 { color: var(--c3); border-color: var(--c3); background: rgba(139,92,246,.08); }
+
+  /* ── CARD TITLE ── */
+  .card-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.12rem;
+    font-weight: 600;
+    color: var(--gold-light);
+    line-height: 1.4;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .card-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── CARD BODY ── */
+  .card-body {
+    color: var(--text-dim);
+    font-size: .95rem;
+    line-height: 1.75;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .5s cubic-bezier(.22,1,.36,1), opacity .4s;
+    opacity: 0;
+  }
+  .card.open .card-body { max-height: 400px; opacity: 1; }
+
+  .card-preview {
+    color: var(--text-dim);
+    font-size: .95rem;
+    line-height: 1.75;
+    font-style: italic;
+    transition: opacity .3s;
+  }
+  .card.open .card-preview { opacity: 0; height: 0; overflow: hidden; }
+
+  .read-more {
+    display: inline-block;
+    margin-top: 14px;
+    font-family: 'Cinzel', serif;
+    font-size: .72rem;
+    letter-spacing: .15em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    transition: color .3s;
+  }
+  .card:hover .read-more { color: var(--gold); }
+  .card.open .read-more { display: none; }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #2a2218, transparent);
+    margin: 14px 0;
+  }
+
+  /* ── LEGEND ── */
+  .legend {
+    max-width: 860px;
+    margin: 0 auto 60px;
+    padding: 0 clamp(16px,5vw,60px);
+    position: relative;
+    z-index: 2;
+  }
+  .legend-inner {
+    border: 1px solid #2a2218;
+    border-radius: 3px;
+    padding: 24px 28px;
+    background: var(--bg-card);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+  }
+  .legend-title {
+    font-family: 'Cinzel', serif;
+    font-size: .8rem;
+    letter-spacing: .2em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .legend-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 200px;
+  }
+  .legend-label {
+    font-family: 'Cinzel', serif;
+    font-size: .82rem;
+    font-weight: 600;
+  }
+  .legend-desc { font-size: .88rem; font-style: italic; color: var(--text-dim); }
+  .l0 { color: var(--c1); }
+  .l1 { color: var(--c2); }
+  .l2 { color: var(--c3); }
+
+  /* ── FLICKER ── */
+  @keyframes flicker {
+    0%,100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: .6; }
+    94% { opacity: 1; }
+    96% { opacity: .7; }
+    97% { opacity: 1; }
+  }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-ornament">✦ ✦ ✦</div>
+  <h1>Incarichi Disponibili</h1>
+  <div class="subtitle">Benvenuti a Palea</div>
+  <div class="header-line"></div>
+</header>
+
+<div class="legend">
+  <div class="legend-inner">
+    <div class="legend-title">Livello di Esperienza Richiesta</div>
+    <div class="legend-item">
+      <span class="legend-label l0">🎲 Tiro per l'Iniziativa</span>
+      <span class="legend-desc">"Ho appena tirato il mio primo d20 e non so ancora cosa significa"</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-label l1">⚔️ Competente nell'Avventura</span>
+      <span class="legend-desc">"Conosco la differenza tra un tiro salvezza e un tiro per colpire, e sopravvivo abbastanza spesso"</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-label l2">📜 Scheda al Massimo</span>
+      <span class="legend-desc">"Ho ottimizzato la mia build, gestisco slot incantesimo nel sonno e piango ancora per quel critico mancato"</span>
+    </div>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const quests = [
+  {
+    icon: "🕯️",
+    title: "Un Bacio di Sangue a Lume di Candela",
+    tier: 0,
+    preview: "Un banchetto in onore di un pretendente al trono. Calici colmi, sorrisi eleganti... e qualcuno che vuole versare sangue invece che vino.",
+    body: `I candelabri sono già accesi, i calici colmi e i vestiti migliori sono stati tirati fuori dall'armadio. Ad Altino si respira aria di festa: il sontuoso banchetto in onore di Charles Vane, pretendente al trono, promette una serata di lusso, musica e diplomazia.\n\nPromette.\n\nPerché qualcuno, tra un brindisi e l'altro, ha intenzione di versare sangue invece che vino. Il bersaglio è Molara, l'attuale regnante, e il tempo stringe: la serata è già cominciata, i sospettati sono tanti e tutti indossano il loro sorriso più elegante.`
+  },
+  {
+    icon: "🃏",
+    title: "Toccata e Fuga",
+    tier: 0,
+    preview: "Nessuno da uccidere. Nessuna battaglia da vincere. Solo una villa, una vecchia e un origami. Semplice, no?",
+    body: `Nessuno da uccidere. Nessuna battaglia da vincere. Solo una villa, una vecchia e un origami.\n\nSemplice, no?\n\nL'anziana Alyssandra è una delle figure più rispettate e temute di So'Tek. La sua villa è il simbolo di quella rispettabilità: elegante, sorvegliata e assolutamente impenetrabile per chiunque non sia stato invitato. E voi non siete stati invitati.\n\nIl vostro compito è semplice: entrate, raggiungete le stanze personali di Alyssandra, lasciate l'origami nel posto giusto e uscite. Senza essere visti, senza fare rumore, senza lasciare tracce. Chi vi ha ingaggiato non ha spiegato perché — e forse è meglio così.`
+  },
+  {
+    icon: "🕰️",
+    title: "Il Sentiero del Mentore Perduto",
+    tier: 0,
+    preview: "So'Hei non dorme da settimane. Il suo mentore è scomparso senza lasciare tracce a Timestone. Qualcuno sa cosa è successo — la domanda è se vorrà parlare.",
+    body: `So'Hei non dorme da settimane. Monaco in addestramento dell'Ordine del Tempo, ha trascorso ogni giorno della sua formazione all'ombra di Jalasar, il suo mentore, la sua guida, il suo nord. Poi, durante un'indagine a Timestone, Jalasar è semplicemente... sparito. Nessun messaggio, nessuna traccia, nessun addio.\n\nTimestone vi aspetta, con i suoi vicoli, i suoi segreti e le sue ombre. Qualcuno sa cosa è successo a Jalasar. Sta a voi scoprire se quel qualcuno è disposto a parlare.`
+  },
+  {
+    icon: "🎪",
+    title: "La Carezza Arlecchina",
+    tier: 1,
+    preview: "Persone care scompaiono nelle Terre dell'Autunno. Le voci portano tutte nella stessa direzione: le luci colorate di un circo itinerante.",
+    body: `Le Terre dell'Autunno sono avvolte da un silenzio strano. Persone care scompaiono nel nulla, senza tracce, senza urla, senza addii. Le voci si rincorrono tra i villaggi come foglie nel vento, finché tutte portano alla stessa direzione: Findaru, un piccolo insediamento di tagliaboschi, dove le luci colorate di un circo itinerante brillano nella notte.\n\nMusica, risate e meraviglia... ma dietro il sorriso dipinto di un pagliaccio, cosa si nasconde davvero? Forse la risposta è lì, sotto il tendone, ad aspettarvi con un inchino.`
+  },
+  {
+    icon: "🏆",
+    title: "La Giostra Aurea",
+    tier: 1,
+    preview: "L'evento più atteso di tutto Palea: spettacoli, competizioni leggendarie e una folla festante. Ma tra il pubblico, qualcuno brama qualcos'altro.",
+    body: `La Giostra Aurea di Aura-stills è uno degli eventi più attesi di tutto Palea: spettacoli mozzafiato, competizioni leggendarie e una folla festante che arriva da ogni angolo del mondo conosciuto.\n\nMa qualcuno, tra il pubblico e il rumore della folla, brama qualcos'altro.\n\nFare le domande giuste alle persone giuste — e soprattutto capire quali risposte nascondono altre domande — potrebbe fare la differenza tra una festa da ricordare e una tragedia da sventare.`
+  },
+  {
+    icon: "🔥",
+    title: "Il Fuoco che Illumina le Tenebre",
+    tier: 1,
+    preview: "Berthio sa qualcosa. Abbastanza da essere tenuto in vita in un antico tempio di Namira, dea della morte. Portate una torcia. Ne avrete bisogno.",
+    body: `Berthio sa qualcosa. Qualcosa di abbastanza importante da far sì che qualcuno decidesse di non ucciderlo, ma di nasconderlo per estorcere quante più informazioni possibili.\n\nLe tracce portano a un antico tempio di Namira, dea della morte, sepolto nel silenzio e nella polvere di un passato che nessuno ha voglia di ricordare. Berthio è là dentro. Forse è ancora vivo, forse.\n\nPortate una torcia. Ne avrete bisogno.`
+  },
+  {
+    icon: "🖼️",
+    title: "La Galleria delle Glorie Perdute",
+    tier: 1,
+    preview: "Un gala, un museo, e un'antica arma da recuperare con discrezione. La Cacciatrice vi aspetta — la domanda è: chi caccerà chi, stanotte?",
+    body: `Le luci del gala sono accese, i bicchieri tintinnano e l'alta nobiltà sfila tra opere d'arte e sorrisi di circostanza. Il nuovo museo apre i battenti questa sera, e il pezzo forte dell'inaugurazione è lei: La Cacciatrice, un antico arco che ha attraversato secoli e mani sconosciute prima di arrivare fin qui.\n\nPeccato che non possa restarci.\n\nIl vostro compito è recuperarlo con discrezione, con stile, e possibilmente senza rovinare la serata a nessuno. Almeno non subito. La Cacciatrice vi aspetta. La domanda è: chi caccerà chi, stanotte?`
+  },
+  {
+    icon: "🎠",
+    title: "Dove la Gioia si Rivela una Gabbia",
+    tier: 2,
+    preview: "Famiglie che parlano. Guardie che contano. Un circo itinerante che non avrebbe dovuto tornare. E una voce che cresce nel silenzio.",
+    body: `Lo scrivo nero su bianco perché temo che, se non lo faccio, finirò per convincermi che sia solo un cattivo presagio o una coincidenza maligna. Le famiglie hanno parlato, la guardia ha contato, ma ufficialmente non esiste ancora nulla. Pochi giorni prima, ho autorizzato l'ingresso di un circo itinerante. Lo conoscevo già — non per sentito dire, l'avevo visto anni fa, altrove, e non aveva dato problemi. Musica, luci, risate.`
+  },
+  {
+    icon: "🔑",
+    title: "Prigioniero n.13",
+    tier: 2,
+    preview: "Non sapete chi è. Non sapete cosa ha fatto. Sapete solo che ha una chiave e che qualcuno paga molto bene per ottenerla.",
+    body: `Non sapete chi è. Non sapete cosa ha fatto. Sapete solo che ha una chiave e che qualcuno è disposto a pagare molto bene per ottenerla.\n\nEntrare sarà la parte semplice. Trovare il Prigioniero n.13 tra centinaia di celle è un'altra storia. Convincerlo a consegnarvi la chiave un'altra ancora. Per non parlare poi di come uscire.\n\nBuona fortuna, ne avrete bisogno.`
+  }
+];
+
+const tierLabel = ["🎲 Tiro per l'Iniziativa","⚔️ Competente nell'Avventura","📜 Scheda al Massimo"];
+const tierClass = ["t0","t1","t2"];
+
+const grid = document.getElementById('grid');
+
+quests.forEach((q, i) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.tier = q.tier;
+  card.innerHTML = `
+    <div class="card-glow"></div>
+    <div class="badge ${tierClass[q.tier]}">${tierLabel[q.tier]}</div>
+    <div class="card-title"><span class="card-icon">${q.icon}</span><span>${q.title}</span></div>
+    <div class="card-preview">${q.preview}</div>
+    <div class="divider"></div>
+    <div class="card-body">${q.body.replace(/\n\n/g,'</p><p>').replace(/^/,'<p>').replace(/$/,'</p>')}</div>
+    <span class="read-more">Leggi l'incarico ↓</span>
+  `;
+  card.addEventListener('click', () => card.classList.toggle('open'));
+  grid.appendChild(card);
+});
+
+</script>
+</body>
+</html>

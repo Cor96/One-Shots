@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendario Lunare di Palea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0c14;
+    --panel:#141827;
+    --panel2:#1b2030;
+    --line:#2d3448;
+    --text:#ece6d6;
+    --muted:#9aa2b8;
+    --gold:#d8b46a;
+    --gold2:#8e6c32;
+    --blood:#d0262f;
+    --blood-soft:rgba(208,38,47,.16);
+    --season:#a9c76b;
+    --bar-h:60px;
+    --display:"Cinzel", Georgia, "Times New Roman", serif;
+    --body:"Cormorant Garamond", Georgia, "Times New Roman", serif;
+  }
+  [data-season="1"]{--season:#a9c76b}
+  [data-season="2"]{--season:#76a64d}
+  [data-season="3"]{--season:#d99d45}
+  [data-season="4"]{--season:#b87538}
+  [data-season="5"]{--season:#a45d4c}
+  [data-season="6"]{--season:#8f5148}
+  [data-season="7"]{--season:#6f8fb1}
+  [data-season="8"]{--season:#596b93}
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 50% -12%, rgba(120,24,38,.32) 0, transparent 42%),
+      linear-gradient(180deg,#090b11,#0d1019 60%,#090b11);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:var(--body);
+    font-size:18px;
+    line-height:1.45;
+    min-height:100vh;
+  }
+  button{font:inherit;color:inherit;cursor:pointer}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  /* Intestazione */
+  .hero{padding:34px 20px 20px;text-align:center}
+  h1{
+    margin:0 0 6px;
+    font-family:var(--display);
+    font-weight:400;
+    font-size:clamp(28px,5vw,48px);
+    letter-spacing:.08em;
+    color:#f1dfb4;
+  }
+  .hero p{margin:0;color:var(--muted);font-style:italic;font-size:19px}
+
+  /* Selettore dei mesi */
+  .rail{
+    max-width:1200px;margin:0 auto;padding:6px 20px 16px;
+    display:grid;grid-template-columns:repeat(8,1fr);gap:8px;
+  }
+  .pill{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-bottom:3px solid var(--pill,#888);
+    border-radius:8px;
+    padding:8px 6px;
+    color:var(--muted);
+    line-height:1.15;
+    text-align:center;
+  }
+  .pill .a{display:block;font-weight:600;font-size:16px}
+  .pill .b{display:block;font-size:15px}
+  .pill:hover{color:var(--text);border-color:#59627b;border-bottom-color:var(--pill,#888)}
+  .pill[aria-current="true"]{
+    background:var(--panel2);color:var(--text);
+    border-color:var(--gold2);border-bottom-color:var(--pill,#888);
+  }
+
+  /* Barra del mese, sempre visibile durante lo scorrimento */
+  .bar{
+    position:sticky;top:0;z-index:20;
+    background:rgba(10,12,20,.92);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .bar::after{
+    content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;
+    background:var(--season);
+  }
+  .bar-in{
+    max-width:1200px;margin:0 auto;height:var(--bar-h);
+    padding:0 20px;display:flex;align-items:center;gap:14px;
+  }
+  .btn{
+    background:var(--panel2);
+    border:1px solid var(--line);
+    padding:9px 14px;
+    border-radius:8px;
+  }
+  .btn:hover{border-color:var(--gold2)}
+  .btn.primary{border-color:rgba(208,38,47,.7);background:rgba(208,38,47,.16);color:#ffb0b0}
+  .btn.primary:hover{background:rgba(208,38,47,.3);border-color:var(--blood)}
+  .nav-btn{
+    flex:none;width:44px;height:44px;padding:0;border-radius:50%;
+    font-size:26px;line-height:1;display:grid;place-items:center;
+  }
+  .bar-title{flex:1;min-width:0;text-align:center}
+  .bar-title h2{
+    margin:0;font-family:var(--display);font-weight:400;
+    font-size:clamp(19px,3.4vw,28px);color:#f0dfb7;line-height:1.15;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .bar-title small{display:block;color:var(--muted);font-size:15px;line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  main{max-width:1200px;margin:0 auto;padding:18px 20px 60px}
+  .layout{display:block}
+
+  .tools{
+    display:flex;justify-content:space-between;align-items:center;
+    gap:10px 16px;flex-wrap:wrap;margin-bottom:12px;
+    scroll-margin-top:calc(var(--bar-h) + 10px);
+  }
+  .tools-l{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muted)}
+  .chip{
+    border:1px solid rgba(208,38,47,.6);
+    background:var(--blood-soft);
+    color:#ff9c9c;
+    padding:3px 13px;border-radius:999px;
+  }
+  .chip:hover{background:rgba(208,38,47,.32)}
+
+  /* Griglia del calendario */
+  .grid-head,.calendar{
+    display:grid;
+    grid-template-columns:46px repeat(5,minmax(0,1fr));
+    gap:5px;
+  }
+  .grid-head{
+    position:sticky;top:var(--bar-h);z-index:10;
+    background:rgba(10,12,20,.95);
+    padding:8px 0 6px;margin-bottom:6px;
+    border-bottom:1px solid var(--gold2);
+  }
+  .wd{text-align:center;font-family:var(--display);line-height:1.15}
+  .wd small{display:block;font-size:11px;color:var(--muted)}
+  .wd b{font-weight:600;font-size:14px;color:var(--gold)}
+
+  .wk{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--muted);font-size:13px;line-height:1.1;
+    border-right:1px solid var(--line);padding-right:4px;
+  }
+  .wk b{font-family:var(--display);font-weight:400;font-size:18px;color:var(--text)}
+
+  .day{
+    position:relative;
+    min-height:112px;padding:8px 6px;
+    background:rgba(21,25,39,.8);
+    border:1px solid var(--line);
+    border-radius:8px;
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    scroll-margin-top:calc(var(--bar-h) + 70px);
+    transition:border-color .15s, background .15s;
+  }
+  .day:hover{border-color:#5b6482;background:rgba(30,36,56,.92)}
+  .num{align-self:flex-start;font-family:var(--display);font-size:17px;line-height:1}
+  .moon-svg{width:46px;height:46px;margin:6px 0 4px;flex:none;display:block}
+  .phase{font-size:14.5px;line-height:1.1;color:var(--muted)}
+  .today-tag{position:absolute;top:7px;right:7px;font-size:12px;color:var(--gold);line-height:1}
+
+  .day.today{border-color:var(--gold)}
+  .day.selected{outline:2px solid var(--gold);outline-offset:-1px;background:rgba(36,43,66,.95)}
+
+  /* Luna di Sangue */
+  .day.blood{
+    background:radial-gradient(120% 90% at 50% 42%, rgba(208,38,47,.24), rgba(110,12,20,.12) 60%, rgba(21,25,39,.85));
+    border-color:rgba(208,38,47,.7);
+  }
+  .day.blood .phase{color:#ff8f8f;font-weight:600}
+  .day.blood .moon-svg,.detail .is-blood{
+    filter:drop-shadow(0 0 7px rgba(255,60,60,.6));
+    animation:glow 5s ease-in-out infinite;
+  }
+  @keyframes glow{50%{filter:drop-shadow(0 0 14px rgba(255,80,80,.95))}}
+  .calendar.fade{animation:fade .22s ease-out}
+  @keyframes fade{from{opacity:.25}to{opacity:1}}
+
+  /* Pannello dei dettagli */
+  .detail{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:22px 20px 20px;
+  }
+  .detail.has-blood{border-color:rgba(208,38,47,.65)}
+  .detail-close{
+    display:none;position:absolute;top:8px;right:8px;
+    width:38px;height:38px;border-radius:50%;
+    background:transparent;border:0;color:var(--muted);font-size:24px;line-height:1;
+  }
+  .empty{color:var(--muted);font-style:italic;margin:0;text-align:center}
+  .d-moon{display:flex;justify-content:center;margin-bottom:10px}
+  .d-moon .moon-svg{width:112px;height:112px;margin:0}
+  .d-date{font-family:var(--display);font-weight:400;font-size:22px;text-align:center;margin:0;color:#f0dfb7}
+  .d-sub{text-align:center;color:var(--muted);margin:2px 0 12px}
+  .d-phase{text-align:center;font-size:21px;margin-bottom:14px}
+  .d-phase.blood{color:#ff8f8f;font-weight:600}
+  .d-list{margin:0 0 14px;display:grid;grid-template-columns:auto 1fr;gap:5px 14px}
+  .d-list dt{color:var(--muted)}
+  .d-list dd{margin:0;text-align:right}
+  .d-next{border-top:1px solid var(--line);padding-top:12px;margin-bottom:14px}
+  .d-actions{display:grid;gap:8px}
+
+  .legend{
+    margin-top:28px;
+    border:1px solid var(--line);
+    background:rgba(21,25,39,.7);
+    border-radius:10px;
+    color:var(--muted);
+    line-height:1.55;
+  }
+  .legend summary{padding:14px 18px;cursor:pointer;color:var(--text);font-family:var(--display);font-size:17px}
+  .legend div{padding:0 18px 6px}
+  .legend p{margin:0 0 12px}
+
+  @media (min-width:1000px){
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:26px;align-items:start}
+    .detail{position:sticky;top:calc(var(--bar-h) + 16px)}
+  }
+  @media (max-width:999px){
+    .rail{display:flex;overflow-x:auto;gap:8px;padding:6px 14px 14px;scroll-snap-type:x proximity}
+    .pill{flex:0 0 auto;min-width:112px;scroll-snap-align:center}
+    .detail{
+      position:fixed;left:0;right:0;bottom:0;z-index:30;
+      border-radius:16px 16px 0 0;border-width:1px 0 0;
+      max-height:68vh;overflow:auto;
+      transform:translateY(105%);transition:transform .25s ease;
+      box-shadow:0 -12px 30px rgba(0,0,0,.5);
+    }
+    .detail.open{transform:none}
+    .detail-close{display:block}
+    body.sheet-open main{padding-bottom:50vh}
+    .d-moon .moon-svg{width:84px;height:84px}
+  }
+  @media (max-width:600px){
+    :root{--bar-h:56px}
+    body{font-size:17px}
+    .bar-in{padding:0 10px;gap:8px}
+    .nav-btn{width:40px;height:40px}
+    main{padding:14px 10px 50px}
+    .grid-head,.calendar{grid-template-columns:28px repeat(5,minmax(0,1fr));gap:4px}
+    .wk small{display:none}
+    .wk b{font-size:15px}
+    .wd small{font-size:9px}
+    .wd b{font-size:9.5px;letter-spacing:0}
+    .day{min-height:76px;padding:5px 3px}
+    .num{font-size:14px}
+    .moon-svg{width:30px;height:30px;margin:4px 0 2px}
+    .phase{display:none}
+    .day.blood .phase{display:block;font-size:9.5px;font-weight:600}
+    .today-tag{font-size:10px;top:5px;right:4px}
+    .day.selected{outline-offset:-2px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- Gradienti condivisi da tutte le lune -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <radialGradient id="g-lit" gradientUnits="userSpaceOnUse" cx="40" cy="38" r="62">
+      <stop offset="0" stop-color="#ee5a5c"/>
+      <stop offset=".55" stop-color="#bf1e27"/>
+      <stop offset="1" stop-color="#7a0f18"/>
+    </radialGradient>
+    <radialGradient id="g-blood" gradientUnits="userSpaceOnUse" cx="40" cy="38" r="62">
+      <stop offset="0" stop-color="#ff7a6e"/>
+      <stop offset=".5" stop-color="#e0262f"/>
+      <stop offset="1" stop-color="#8a0b17"/>
+    </radialGradient>
+    <radialGradient id="g-dark" gradientUnits="userSpaceOnUse" cx="50" cy="50" r="50">
+      <stop offset="0" stop-color="#1c0d12"/>
+      <stop offset="1" stop-color="#0d0709"/>
+    </radialGradient>
+  </defs>
+</svg>
+
+<header class="hero">
+  <h1>Calendario Lunare</h1>
+  <p>Il computo del tempo nel mondo di Palea</p>
+</header>
+
+<nav class="rail" id="rail" aria-label="Mesi dell'anno"></nav>
+
+<div class="bar">
+  <div class="bar-in">
+    <button class="btn nav-btn" id="prev" aria-label="Mese precedente" title="Mese precedente">‹</button>
+    <div class="bar-title">
+      <h2 id="monthName"></h2>
+      <small id="monthInfo"></small>
+    </div>
+    <button class="btn nav-btn" id="next" aria-label="Mese successivo" title="Mese successivo">›</button>
+  </div>
+</div>
+
+<main>
+  <div class="layout">
+    <section id="cal" aria-label="Giorni del mese">
+      <div class="tools" id="tools"></div>
+      <div class="grid-head" id="weekdays"></div>
+      <div class="calendar" id="calendar"></div>
+    </section>
+
+    <aside class="detail" id="detail" aria-live="polite">
+      <button class="detail-close" id="detailClose" aria-label="Chiudi i dettagli">×</button>
+      <div id="detailBody"></div>
+    </aside>
+  </div>
+
+  <details class="legend">
+    <summary>Come funziona il calendario</summary>
+    <div>
+      <p>Ogni settimana ha cinque giorni: Dies Croni, Dies Neptunae, Dies Nikae, Dies Suruati e Dies Namirae. Ogni mese ha dieci settimane, cioè cinquanta giorni, e l'anno ha otto mesi, per un totale di quattrocento giorni.</p>
+      <p>Il ciclo lunare mostrato qui dura <span id="cycleLen"></span> giorni. Ogni ciclo ha una sola Luna di Sangue, in corrispondenza della luna piena: con questa durata ce ne sono <span id="bloodYear"></span> ogni anno. Per cambiare la durata del ciclo, modifica la costante LUNAR_CYCLE nel codice.</p>
+      <p>Scorciatoie: le frecce sinistra e destra cambiano mese, Esc chiude i dettagli. Da telefono puoi scorrere il calendario verso destra o verso sinistra. Il giorno segnato come "oggi" viene ricordato dal browser.</p>
+    </div>
+  </details>
+</main>
+
+<script>
+(function(){
+"use strict";
+
+const months = [
+  "Primavera Nascente","Primavera Calante",
+  "Estate Nascente","Estate Calante",
+  "Autunno Nascente","Autunno Calante",
+  "Inverno Nascente","Inverno Calante"
+];
+const weekdays = ["Dies Croni","Dies Neptunae","Dies Nikae","Dies Suruati","Dies Namirae"];
+const SEASON = ["#a9c76b","#76a64d","#d99d45","#b87538","#a45d4c","#8f5148","#6f8fb1","#596b93"];
+
+// Durata del ciclo lunare in giorni del mondo.
+// 25 = esattamente 5 settimane (e 2 cicli per ogni mese).
+const LUNAR_CYCLE = 25;
+
+const WEEK_LEN = 5;
+const MONTH_LEN = 50;
+const YEAR_LEN = months.length * MONTH_LEN;
+const STORAGE_KEY = "palea-oggi";
+
+const NAMES = {
+  new:"Luna nuova", waxCres:"Falce crescente", firstQ:"Primo quarto",
+  waxGib:"Gibbosa crescente", full:"Luna di Sangue", wanGib:"Gibbosa calante",
+  lastQ:"Ultimo quarto", wanCres:"Falce calante"
+};
+
+const $ = id => document.getElementById(id);
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const scrollBehavior = reduceMotion ? "auto" : "smooth";
+
+let currentMonth = 0;
+let selected = null;   // giorno dell'anno selezionato (0-399) oppure null
+let today = null;      // giorno dell'anno segnato come "oggi" oppure null
+
+try{
+  const v = localStorage.getItem(STORAGE_KEY);
+  if(v !== null && !isNaN(+v)) today = ((+v % YEAR_LEN) + YEAR_LEN) % YEAR_LEN;
+}catch(e){}
+if(today !== null) currentMonth = Math.floor(today / MONTH_LEN);
+
+/* ---------- Calcoli ---------- */
+
+function fromDoy(doy){
+  const m = Math.floor(doy / MONTH_LEN);
+  const d = doy % MONTH_LEN + 1;
+  return { m, d, week: Math.floor((d-1)/WEEK_LEN) + 1, wd: doy % WEEK_LEN };
+}
+
+function lunarInfo(doy){
+  const age = doy % LUNAR_CYCLE;
+  const p = (age + 0.5) / LUNAR_CYCLE;          // posizione nel ciclo, da 0 a 1
+  const fullAge = Math.floor(LUNAR_CYCLE / 2);   // un solo giorno di luna piena per ciclo
+  let key;
+  if(age === fullAge)      key = "full";
+  else if(p < .04 || p > .96) key = "new";
+  else if(p < .23)         key = "waxCres";
+  else if(p < .29)         key = "firstQ";
+  else if(p < .50)         key = "waxGib";
+  else if(p < .71)         key = "wanGib";
+  else if(p < .77)         key = "lastQ";
+  else                     key = "wanCres";
+  return { age, key, p: key === "full" ? .5 : p, name: NAMES[key], blood: key === "full" };
+}
+
+function nextBlood(from){
+  for(let i = 1; i <= YEAR_LEN; i++){
+    const doy = (((from + i) % YEAR_LEN) + YEAR_LEN) % YEAR_LEN;
+    if(lunarInfo(doy).blood) return { doy, delta: i, wrapped: from + i >= YEAR_LEN };
+  }
+  return null;
+}
+
+function bloodDaysOfMonth(m){
+  const out = [];
+  for(let d = 0; d < MONTH_LEN; d++){
+    if(lunarInfo(m * MONTH_LEN + d).blood) out.push(d + 1);
+  }
+  return out;
+}
+
+/* ---------- Disegno della luna (rossa) ---------- */
+
+const R = 44;
+function moonSVG(L){
+  const k = Math.cos(2 * Math.PI * L.p);
+  const rx = Math.max(Math.abs(k) * R, 0.01).toFixed(2);
+  const waxing = L.p < 0.5;
+  let path = "";
+  if(L.key !== "new"){
+    const sweepT = waxing ? (k > 0 ? 0 : 1) : (k > 0 ? 1 : 0);
+    path = `M50 ${50-R} A${R} ${R} 0 0 ${waxing ? 1 : 0} 50 ${50+R} A${rx} ${R} 0 0 ${sweepT} 50 ${50-R} Z`;
+  }
+  const fill = L.blood ? "url(#g-blood)" : "url(#g-lit)";
+  return `<svg class="moon-svg${L.blood ? " is-blood" : ""}" viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="${R}" fill="url(#g-dark)" stroke="rgba(208,38,47,.45)" stroke-width="1.5"/>
+    ${path ? `<path d="${path}" fill="${fill}"/>` : ""}
+  </svg>`;
+}
+
+/* ---------- Costruzione dell'interfaccia ---------- */
+
+const rail = $("rail"), calEl = $("calendar"), toolsEl = $("tools");
+
+months.forEach((name, i) => {
+  const [a, b] = name.split(" ");
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "pill";
+  btn.dataset.m = i;
+  btn.style.setProperty("--pill", SEASON[i]);
+  btn.innerHTML = `<span class="a">${a}</span><span class="b">${b}</span>`;
+  btn.addEventListener("click", () => setMonth(i));
+  rail.appendChild(btn);
+});
+
+(function buildWeekdays(){
+  const head = $("weekdays");
+  head.appendChild(document.createElement("div"));
+  weekdays.forEach(w => {
+    const [a, b] = w.split(" ");
+    const el = document.createElement("div");
+    el.className = "wd";
+    el.innerHTML = `<small>${a}</small><b>${b}</b>`;
+    head.appendChild(el);
+  });
+})();
+
+function render(animate){
+  document.body.dataset.season = currentMonth + 1;
+
+  $("monthName").textContent = months[currentMonth];
+  $("monthInfo").textContent =
+    `Mese ${currentMonth+1} di ${months.length}, giorni ${currentMonth*MONTH_LEN+1}–${currentMonth*MONTH_LEN+MONTH_LEN} dell'anno`;
+
+  // Selettore dei mesi
+  rail.querySelectorAll(".pill").forEach(p => {
+    const on = +p.dataset.m === currentMonth;
+    if(on) p.setAttribute("aria-current", "true"); else p.removeAttribute("aria-current");
+    if(on && rail.scrollWidth > rail.clientWidth){
+      rail.scrollTo({ left: p.offsetLeft - rail.clientWidth/2 + p.clientWidth/2, behavior: scrollBehavior });
+    }
+  });
+
+  // Strumenti del mese: Lune di Sangue e ritorno a "oggi"
+  const bloods = bloodDaysOfMonth(currentMonth);
+  toolsEl.innerHTML = `
+    <div class="tools-l">
+      <span>Lune di Sangue in questo mese:</span>
+      ${bloods.length
+        ? bloods.map(d => `<button type="button" class="chip" data-doy="${currentMonth*MONTH_LEN + d - 1}">giorno ${d}</button>`).join("")
+        : "<span>nessuna</span>"}
+    </div>
+    <div>${today !== null ? `<button type="button" class="btn" id="goToday">Vai a oggi</button>` : ""}</div>`;
+
+  // Griglia dei giorni
+  calEl.innerHTML = "";
+  for(let day = 1; day <= MONTH_LEN; day++){
+    const doy = currentMonth * MONTH_LEN + day - 1;
+    const t = fromDoy(doy);
+    const L = lunarInfo(doy);
+
+    if((day - 1) % WEEK_LEN === 0){
+      const wk = document.createElement("div");
+      wk.className = "wk";
+      wk.innerHTML = `<small>Sett.</small><b>${t.week}</b>`;
+      wk.title = `Settimana ${t.week}`;
+      calEl.appendChild(wk);
+    }
+
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "day" + (L.blood ? " blood" : "") + (doy === today ? " today" : "") + (doy === selected ? " selected" : "");
+    b.dataset.doy = doy;
+    b.title = L.name;
+    b.setAttribute("aria-pressed", doy === selected);
+    b.setAttribute("aria-label",
+      `${t.d} ${months[t.m]}, ${weekdays[t.wd]}, ${L.name}${doy === today ? ", oggi" : ""}`);
+    b.innerHTML = `
+      <span class="num">${t.d}</span>
+      ${doy === today ? '<span class="today-tag">Oggi</span>' : ""}
+      ${moonSVG(L)}
+      <span class="phase">${L.name}</span>`;
+    calEl.appendChild(b);
+  }
+
+  if(animate && !reduceMotion){
+    calEl.classList.remove("fade");
+    void calEl.offsetWidth;
+    calEl.classList.add("fade");
+  }
+  renderDetail();
+}
+
+function plural(n, one, many){ return `${n} ${n === 1 ? one : many}`; }
+
+function renderDetail(){
+  const panel = $("detail"), body = $("detailBody");
+  document.body.classList.toggle("sheet-open", selected !== null);
+  panel.classList.toggle("open", selected !== null);
+
+  if(selected === null){
+    panel.classList.remove("has-blood");
+    body.innerHTML = `<p class="empty">Scegli un giorno per vedere la fase lunare, la settimana e la prossima Luna di Sangue.</p>`;
+    return;
+  }
+
+  const t = fromDoy(selected);
+  const L = lunarInfo(selected);
+  const nb = nextBlood(selected);
+  panel.classList.toggle("has-blood", L.blood);
+
+  let next = "";
+  if(nb){
+    const nt = fromDoy(nb.doy);
+    next = `<div class="d-next"><strong>Prossima Luna di Sangue</strong><br>
+      tra ${plural(nb.delta, "giorno", "giorni")}, il giorno ${nt.d} di ${months[nt.m]}${nb.wrapped ? " dell'anno seguente" : ""}.</div>`;
+  }
+
+  body.innerHTML = `
+    <div class="d-moon">${moonSVG(L)}</div>
+    <h3 class="d-date">${t.d} ${months[t.m]}</h3>
+    <p class="d-sub">${weekdays[t.wd]}${selected === today ? ", oggi" : ""}</p>
+    <div class="d-phase${L.blood ? " blood" : ""}">${L.name}</div>
+    <dl class="d-list">
+      <dt>Giorno del mese</dt><dd>${t.d} di ${MONTH_LEN}</dd>
+      <dt>Settimana</dt><dd>${t.week} di ${MONTH_LEN / WEEK_LEN}</dd>
+      <dt>Giorno dell'anno</dt><dd>${selected + 1} di ${YEAR_LEN}</dd>
+      <dt>Ciclo lunare</dt><dd>giorno ${L.age + 1} di ${LUNAR_CYCLE}</dd>
+    </dl>
+    ${next}
+    <div class="d-actions">
+      ${nb ? `<button type="button" class="btn primary" data-act="next-blood">Vai alla prossima Luna di Sangue</button>` : ""}
+      <button type="button" class="btn" data-act="${selected === today ? "clear-today" : "set-today"}">
+        ${selected === today ? "Rimuovi il segno di oggi" : "Imposta come oggi"}
+      </button>
+    </div>`;
+}
+
+/* ---------- Azioni ---------- */
+
+function setMonth(i, noScroll){
+  currentMonth = ((i % months.length) + months.length) % months.length;
+  if(selected !== null && Math.floor(selected / MONTH_LEN) !== currentMonth) selected = null;
+  render(true);
+  if(!noScroll && toolsEl.getBoundingClientRect().top < 60){
+    toolsEl.scrollIntoView({ behavior: scrollBehavior, block: "start" });
+  }
+}
+
+function selectDay(doy){
+  selected = doy;
+  calEl.querySelectorAll(".day").forEach(b => {
+    const on = +b.dataset.doy === selected;
+    b.classList.toggle("selected", on);
+    b.setAttribute("aria-pressed", on);
+  });
+  renderDetail();
+}
+
+function jumpTo(doy){
+  const m = Math.floor(doy / MONTH_LEN);
+  if(m !== currentMonth) setMonth(m, true);
+  selectDay(doy);
+  const cell = calEl.querySelector(`.day[data-doy="${doy}"]`);
+  if(cell) cell.scrollIntoView({ behavior: scrollBehavior, block: "center" });
+}
+
+function setToday(v){
+  today = v;
+  try{
+    if(v === null) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, String(v));
+  }catch(e){}
+  render(false);
+}
+
+/* ---------- Eventi ---------- */
+
+calEl.addEventListener("click", e => {
+  const b = e.target.closest(".day");
+  if(b) selectDay(+b.dataset.doy);
+});
+
+toolsEl.addEventListener("click", e => {
+  const chip = e.target.closest(".chip");
+  if(chip) jumpTo(+chip.dataset.doy);
+  if(e.target.id === "goToday" && today !== null) jumpTo(today);
+});
+
+$("detail").addEventListener("click", e => {
+  const a = e.target.closest("[data-act]");
+  if(!a) return;
+  const act = a.dataset.act;
+  if(act === "next-blood"){ const nb = nextBlood(selected); if(nb) jumpTo(nb.doy); }
+  else if(act === "set-today") setToday(selected);
+  else if(act === "clear-today") setToday(null);
+});
+
+$("detailClose").addEventListener("click", () => selectDay(null));
+$("prev").addEventListener("click", () => setMonth(currentMonth - 1));
+$("next").addEventListener("click", () => setMonth(currentMonth + 1));
+
+document.addEventListener("keydown", e => {
+  if(e.altKey || e.ctrlKey || e.metaKey) return;
+  if(e.key === "ArrowLeft") setMonth(currentMonth - 1);
+  else if(e.key === "ArrowRight") setMonth(currentMonth + 1);
+  else if(e.key === "Escape") selectDay(null);
+});
+
+// Scorrimento orizzontale su telefono
+let tx = null, ty = null;
+$("cal").addEventListener("touchstart", e => {
+  const t = e.touches[0]; tx = t.clientX; ty = t.clientY;
+}, { passive: true });
+$("cal").addEventListener("touchend", e => {
+  if(tx === null) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - tx, dy = t.clientY - ty;
+  tx = null;
+  if(Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) setMonth(currentMonth + (dx < 0 ? 1 : -1));
+}, { passive: true });
+
+/* ---------- Avvio ---------- */
+
+$("cycleLen").textContent = LUNAR_CYCLE;
+let bloodCount = 0;
+for(let d = 0; d < YEAR_LEN; d++) if(lunarInfo(d).blood) bloodCount++;
+$("bloodYear").textContent = bloodCount;
+
+render(false);
+})();
+</script>
+</body>
+</html>

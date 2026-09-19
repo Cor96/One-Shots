@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veleni · Consultazione rapida per la campagna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #14211c;
+    --panel: #1d2f27;
+    --panel-2: #243a30;
+    --line: #34503f;
+    --ink: #e8ecdf;
+    --ink-strong: #ffffff;
+    --muted: #a9bbaf;
+    --focus: #f2e6a0;
+
+    --inalazione: #7fc8d9;
+    --ingestione: #e0b25a;
+    --contatto: #b9a0e6;
+    --ferimento: #ee7a6e;
+
+    --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    --sans: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+
+  /* Intestazione */
+  header.top { padding: 40px 0 22px; }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(2.8rem, 8vw, 4.6rem);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    margin: 0 0 12px;
+    color: var(--ink-strong);
+  }
+  .lead { max-width: 60ch; color: var(--muted); margin: 0; font-size: 1.05rem; }
+  .legend {
+    margin: 14px 0 0;
+    max-width: 68ch;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  /* Barra strumenti */
+  .toolbar {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(20, 33, 28, 0.96);
+    backdrop-filter: blur(6px);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .toolbar .wrap { padding-top: 14px; padding-bottom: 14px; display: grid; gap: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+  .search { position: relative; flex: 1 1 280px; min-width: 200px; }
+  .search input {
+    width: 100%;
+    font: inherit;
+    color: var(--ink-strong);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px 44px 11px 14px;
+  }
+  .search input::placeholder { color: var(--muted); }
+  .search input:focus-visible { outline-offset: 0; }
+  .search .kbd {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 0.8rem; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 5px; padding: 0 7px;
+    pointer-events: none;
+  }
+  .search input:not(:placeholder-shown) ~ .kbd { display: none; }
+
+  label.sel { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.92rem; }
+  select {
+    font: inherit; color: var(--ink-strong);
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 12px;
+  }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .seg button {
+    font: inherit; font-size: 0.92rem; color: var(--muted);
+    background: var(--panel); border: 0; padding: 10px 14px; cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--ink-strong); font-weight: 600; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    --c: var(--ink);
+    font: inherit; font-size: 0.95rem; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px 6px 10px;
+  }
+  .chip .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
+  .chip .n { color: var(--muted); font-size: 0.85rem; }
+  .chip[aria-pressed="true"] { background: var(--panel-2); border-color: var(--c); color: var(--ink-strong); }
+  .chip[data-type="Inalazione"] { --c: var(--inalazione); }
+  .chip[data-type="Ingestione"] { --c: var(--ingestione); }
+  .chip[data-type="Contatto"] { --c: var(--contatto); }
+  .chip[data-type="Ferimento"] { --c: var(--ferimento); }
+  .chip.all .dot { background: conic-gradient(var(--inalazione) 0 25%, var(--ingestione) 0 50%, var(--contatto) 0 75%, var(--ferimento) 0); }
+  .chip.all[aria-pressed="true"] { border-color: var(--ink); }
+
+  .status { color: var(--muted); font-size: 0.92rem; margin: 22px 0 14px; }
+
+  /* Schede */
+  main { padding-bottom: 60px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+  .grid.compact { grid-template-columns: 1fr; gap: 10px; }
+
+  .card {
+    --c: var(--ink);
+    display: grid; grid-template-columns: 52px 1fr; gap: 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--c);
+    border-radius: 12px;
+    padding: 16px 18px 16px 14px;
+  }
+  .card[data-type="Inalazione"] { --c: var(--inalazione); }
+  .card[data-type="Ingestione"] { --c: var(--ingestione); }
+  .card[data-type="Contatto"] { --c: var(--contatto); }
+  .card[data-type="Ferimento"] { --c: var(--ferimento); }
+
+  /* Fiala: il livello indica la CD */
+  .gauge { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .vial { position: relative; width: 34px; height: 86px; }
+  .vial-neck {
+    position: absolute; top: 0; left: 9px; right: 9px; height: 20px;
+    border: 2px solid var(--c); border-bottom: 0; border-radius: 3px 3px 0 0;
+  }
+  .vial-body {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 70px;
+    border: 2px solid var(--c); border-radius: 6px 6px 17px 17px;
+    overflow: hidden; background: rgba(255, 255, 255, 0.03);
+  }
+  .vial-fill { position: absolute; left: 0; right: 0; bottom: 0; height: var(--fill); background: var(--c); opacity: 0.85; }
+  .first .vial-fill { animation: fill 900ms ease-out both; }
+  @keyframes fill { from { height: 0; } }
+  .cd { text-align: center; line-height: 1.1; }
+  .cd b { display: block; font-size: 1.35rem; color: var(--ink-strong); font-weight: 700; }
+  .cd span { font-size: 0.78rem; color: var(--muted); }
+
+  .card h2 {
+    font-family: var(--serif); font-weight: 700;
+    font-size: 1.65rem; line-height: 1.1; margin: 0; color: var(--ink-strong);
+  }
+  .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 8px; }
+  .type { color: var(--c); font-weight: 600; font-size: 0.95rem; }
+
+  .facts { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0 0 10px; padding: 0; }
+  .facts div { display: flex; gap: 6px; font-size: 0.93rem; }
+  .facts dt { color: var(--muted); }
+  .facts dd { margin: 0; color: var(--ink-strong); font-weight: 600; }
+
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; padding: 0; list-style: none; }
+  .pills li {
+    font-size: 0.85rem; padding: 2px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel-2);
+  }
+
+  .desc { margin: 0 0 12px; max-width: 70ch; }
+  .desc strong { color: var(--ink-strong); font-weight: 700; }
+  .compact .card:not(.open) .desc { display: none; }
+
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .dice {
+    font: inherit; font-size: 0.9rem; cursor: pointer;
+    color: var(--ink-strong); background: var(--panel-2);
+    border: 1px solid var(--c); border-radius: 8px; padding: 5px 12px;
+  }
+  .dice:hover { background: var(--line); }
+  .dice small { color: var(--muted); font-size: 0.82rem; }
+  .toggle {
+    display: none;
+    font: inherit; font-size: 0.9rem; cursor: pointer;
+    background: transparent; color: var(--muted);
+    border: 0; padding: 5px 4px; text-decoration: underline;
+  }
+  .compact .toggle { display: inline; }
+  .result { margin: 10px 0 0; font-size: 0.95rem; }
+  .result:empty { display: none; }
+  .result b { color: var(--c); font-size: 1.15rem; }
+  .result small { color: var(--muted); }
+
+  .empty {
+    grid-column: 1 / -1; text-align: center;
+    border: 1px dashed var(--line); border-radius: 12px; padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty button {
+    margin-top: 12px; font: inherit; cursor: pointer;
+    color: var(--ink-strong); background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 16px;
+  }
+
+  @media (max-width: 520px) {
+    .card { grid-template-columns: 44px 1fr; gap: 12px; padding: 14px 14px 14px 10px; }
+    .vial { width: 30px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .first .vial-fill { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Veleni</h1>
+    <p class="lead">Cerca per nome o per effetto, filtra per modo di somministrazione e tira i dadi dei danni direttamente dalla scheda.</p>
+    <p class="legend">Ogni veleno richiede un tiro salvezza su Costituzione. Il livello nella fiala indica la CD: più è piena, più è difficile resistere. Il colore indica il tipo. I costi sono in monete d'oro (mo).</p>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="wrap">
+    <div class="row">
+      <div class="search">
+        <input id="q" type="search" placeholder="Cerca un veleno o un effetto (es. paralizzata)" aria-label="Cerca un veleno" autocomplete="off">
+        <span class="kbd" aria-hidden="true">/</span>
+      </div>
+      <label class="sel">Ordina per
+        <select id="sort">
+          <option value="nome">Nome</option>
+          <option value="costo-asc">Costo, dal più basso</option>
+          <option value="costo-desc">Costo, dal più alto</option>
+          <option value="cd-asc">CD, dalla più bassa</option>
+          <option value="cd-desc">CD, dalla più alta</option>
+          <option value="tipo">Tipo</option>
+        </select>
+      </label>
+      <div class="seg" role="group" aria-label="Vista">
+        <button type="button" data-view="schede" aria-pressed="true">Schede</button>
+        <button type="button" data-view="elenco" aria-pressed="false">Elenco</button>
+      </div>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Filtra per tipo"></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+  <div class="grid first" id="list"></div>
+</main>
+
+<script>
+const DATA = [
+  { nome: "Essenza di Etere", tipo: "Inalazione", costo: 300, cd: 15, durata: "3 ore",
+    effetti: ["Priva di sensi"],
+    desc: `Una creatura soggetta a questo veleno deve superare <strong>un tiro salvezza su Costituzione con CD 15</strong> altrimenti diventa <strong>avvelenata per 3 ore</strong>. La creatura avvelenata è priva di sensi. La creatura si sveglia se subisce danni o se un'altra creatura usa un'azione per svegliarla scuotendola.` },
+
+  { nome: "Fumi di Othur Bruciato", tipo: "Inalazione", costo: 500, cd: 13, durata: "Finché supera 3 tiri salvezza",
+    effetti: ["Danni ripetuti"],
+    dadi: [{ e: "3d6", l: "danni iniziali", k: "danni" }, { e: "1d6", l: "per ogni TS fallito successivo", k: "danni" }],
+    desc: `Una creatura soggetta a questo veleno deve superare <strong>un tiro salvezza su Costituzione con CD 13</strong> altrimenti <strong>subisce 10 (3d6) danni da veleno</strong> e deve ripetere il tiro salvezza all'inizio di ogni suo turno. A ogni successivo tiro salvezza fallito, il personaggio <strong>subisce 3 (1d6) danni da veleno</strong>. Dopo tre tiri salvezza superati, l'effetto del veleno termina.` },
+
+  { nome: "Lacrime di Mezzanotte", tipo: "Ingestione", costo: 1500, cd: 17, durata: "Effetto allo scoccare della mezzanotte",
+    effetti: ["Effetto ritardato"],
+    dadi: [{ e: "9d6", l: "danni", k: "danni", half: true }],
+    desc: `Una creatura che ingerisce questo veleno non subisce alcun effetto fino allo scoccare della mezzanotte. Se il veleno nel frattempo non è stato neutralizzato, la creatura deve effettuare <strong>un tiro salvezza su Costituzione con CD 17</strong>; se lo fallisce, <strong>subisce 31 (9d6) danni da veleno</strong>, mentre se lo supera, subisce la metà di quei danni.` },
+
+  { nome: "Malizia", tipo: "Inalazione", costo: 250, cd: 15, durata: "1 ora",
+    effetti: ["Accecata"],
+    desc: `Una creatura soggetta a questo veleno deve superare <strong>un tiro salvezza su Costituzione con CD 15</strong>, altrimenti diventa <strong>avvelenata per 1 ora</strong>. La creatura avvelenata è accecata.` },
+
+  { nome: "Muco di Vermeiena", tipo: "Contatto", costo: 200, cd: 13, durata: "1 minuto",
+    effetti: ["Paralizzata", "Va estratto da un vermeiena"],
+    desc: `Questo veleno deve essere estratto da un vermeiena morto o incapacitato. Una creatura soggetta a questo veleno deve <strong>superare un tiro salvezza su Costituzione con CD 13</strong>, altrimenti diventa <strong>avvelenata per 1 minuto</strong>. Una creatura avvelenata è paralizzata; può ripetere il tiro salvezza alla fine di ogni suo turno e, se lo supera, l'effetto per lei termina.` },
+
+  { nome: "Olio di Taggit", tipo: "Contatto", costo: 400, cd: 13, durata: "24 ore",
+    effetti: ["Priva di sensi"],
+    desc: `Una creatura soggetta a questo veleno deve superare <strong>un tiro salvezza su Costituzione con CD 13</strong>, altrimenti diventa <strong>avvelenata per 24 ore</strong>. La creatura avvelenata è priva di sensi. Si risveglia se subisce danni.` },
+
+  { nome: "Sangue di Assassino", tipo: "Ingestione", costo: 150, cd: 10, durata: "24 ore",
+    effetti: ["Avvelenata"],
+    dadi: [{ e: "1d12", l: "danni", k: "danni", half: true }],
+    desc: `Una creatura soggetta a questo veleno deve effettuare <strong>un tiro salvezza su Costituzione con CD 10</strong>; se lo fallisce, <strong>subisce 6 (1d12) danni da veleno</strong> ed è <strong>avvelenata per 24 ore</strong> mentre se lo supera, subisce la metà di quei danni e non è avvelenata.` },
+
+  { nome: "Siero della Verità", tipo: "Ingestione", costo: 150, cd: 11, durata: "1 ora",
+    effetti: ["Non può mentire"],
+    desc: `Una creatura soggetta a questo veleno deve superare <strong>un tiro salvezza su Costituzione con CD 11</strong>, altrimenti diventa <strong>avvelenata per 1 ora</strong>. La creatura avvelenata non può mentire consapevolmente, come se fosse sotto l'effetto di un incantesimo <em>zona di verità</em>.` },
+
+  { nome: "Tintura Pallida", tipo: "Ingestione", costo: 250, cd: 16, durata: "Finché supera 7 tiri salvezza (uno ogni 24 ore)",
+    effetti: ["Avvelenata", "Danni non curabili"],
+    dadi: [{ e: "1d6", l: "danni iniziali", k: "danni" }, { e: "1d6", l: "per ogni TS fallito ogni 24 ore", k: "danni" }],
+    desc: `Una creatura soggetta a questo veleno deve superare <strong>un tiro salvezza su Costituzione con CD 16</strong>, altrimenti <strong>subisce 3 (1d6) danni da veleno</strong> e <strong>diventa avvelenata</strong>. La creatura avvelenata deve <strong>ripetere il tiro salvezza ogni 24 ore</strong> e, se lo fallisce <strong>subisce 3 (1d6) danni da veleno</strong>. Finché l'effetto del veleno non termina, i danni da esso inferti non possono essere curati in alcun modo. Dopo sette tiri salvezza superati, l'effetto termina e la creatura può guarire normalmente.` },
+
+  { nome: "Torpore", tipo: "Ingestione", costo: 600, cd: 11, durata: "4d6 ore",
+    effetti: ["Incapacitata"],
+    dadi: [{ e: "4d6", l: "ore di avvelenamento", k: "ore" }],
+    desc: `Una creatura soggetta a questo veleno deve superare <strong>un tiro salvezza su Costituzione con CD 11</strong>, altrimenti diventa <strong>avvelenata per 4d6 ore</strong>. La creatura avvelenata è incapacitata.` },
+
+  { nome: "Veleno di Serpente", tipo: "Ferimento", costo: 200, cd: 11, durata: "Istantaneo",
+    effetti: ["Danni da veleno", "Va estratto da un serpente velenoso gigante"],
+    dadi: [{ e: "3d6", l: "danni", k: "danni", half: true }],
+    desc: `Questo veleno deve essere estratto da un serpente velenoso gigante morto o incapacitato. Una creatura soggetta a questo veleno deve effettuare <strong>un tiro salvezza su Costituzione con CD 11</strong>: se lo fallisce, <strong>subisce 10 (3d6) danni da veleno</strong> mentre se lo supera, subisce la metà di quei danni.` },
+
+  { nome: "Veleno di Verme Purpureo", tipo: "Ferimento", costo: 2000, cd: 19, durata: "Istantaneo",
+    effetti: ["Danni da veleno", "Va estratto da un verme purpureo"],
+    dadi: [{ e: "12d6", l: "danni", k: "danni", half: true }],
+    desc: `Questo veleno deve essere estratto da un verme purpureo morto o incapacitato. Una creatura soggetta a questo veleno deve effettuare <strong>un tiro salvezza su Costituzione con CD 19</strong>: se lo fallisce, <strong>subisce 42 (12d6) danni da veleno</strong>, mentre se lo supera, subisce la metà di quei danni.` },
+
+  { nome: "Veleno di Viverna", tipo: "Ferimento", costo: 1200, cd: 15, durata: "Istantaneo",
+    effetti: ["Danni da veleno", "Va estratto da una viverna"],
+    dadi: [{ e: "7d6", l: "danni", k: "danni", half: true }],
+    desc: `Questo veleno deve essere estratto da una viverna morta o incapacitata. Una creatura soggetta a questo veleno deve effettuare <strong>un tiro salvezza su Costituzione con CD 15</strong>; se lo fallisce, <strong>subisce 24 (7d6) danni da veleno</strong>, mentre se lo supera, subisce la metà di quei danni.` },
+
+  { nome: "Veleno Drow", tipo: "Ferimento", costo: 200, cd: 13, durata: "1 ora",
+    effetti: ["Priva di sensi se il TS fallisce di 5 o più"],
+    desc: `Una creatura soggetta a questo veleno deve superare <strong>un tiro salvezza su Costituzione con CD 13</strong>, altrimenti è <strong>avvelenata per 1 ora</strong>. Se fallisce il tiro salvezza di 5 o più, la creatura è anche priva di sensi finché è avvelenata in questo modo. La creatura si sveglia se subisce danni o se un'altra creatura usa un'azione per svegliarla scuotendola.` }
+];
+
+const TIPI = ["Inalazione", "Ingestione", "Contatto", "Ferimento"];
+const norm = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const strip = h => h.replace(/<[^>]+>/g, "");
+const mo = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " mo";
+
+DATA.forEach((p, i) => {
+  p.id = i;
+  p.haystack = norm([p.nome, p.tipo, p.durata, p.effetti.join(" "), strip(p.desc)].join(" "));
+});
+
+const state = { q: "", tipi: new Set(), sort: "nome", view: "schede" };
+const open = new Set();
+const results = new Map();
+
+const $list = document.getElementById("list");
+const $status = document.getElementById("status");
+const $chips = document.getElementById("chips");
+const $q = document.getElementById("q");
+
+/* Chip dei tipi */
+function renderChips() {
+  const allOn = state.tipi.size === 0;
+  let html = `<button type="button" class="chip all" data-type="" aria-pressed="${allOn}"><span class="dot"></span>Tutti <span class="n">${DATA.length}</span></button>`;
+  TIPI.forEach(t => {
+    const n = DATA.filter(p => p.tipo === t).length;
+    html += `<button type="button" class="chip" data-type="${t}" aria-pressed="${state.tipi.has(t)}"><span class="dot"></span>${t} <span class="n">${n}</span></button>`;
+  });
+  $chips.innerHTML = html;
+}
+
+/* Filtro e ordinamento */
+function visibili() {
+  const words = norm(state.q).split(/\s+/).filter(Boolean);
+  const list = DATA.filter(p =>
+    (state.tipi.size === 0 || state.tipi.has(p.tipo)) &&
+    words.every(w => p.haystack.includes(w))
+  );
+  const cmpNome = (a, b) => a.nome.localeCompare(b.nome, "it");
+  const sorters = {
+    "nome": cmpNome,
+    "costo-asc": (a, b) => a.costo - b.costo || cmpNome(a, b),
+    "costo-desc": (a, b) => b.costo - a.costo || cmpNome(a, b),
+    "cd-asc": (a, b) => a.cd - b.cd || cmpNome(a, b),
+    "cd-desc": (a, b) => b.cd - a.cd || cmpNome(a, b),
+    "tipo": (a, b) => TIPI.indexOf(a.tipo) - TIPI.indexOf(b.tipo) || cmpNome(a, b)
+  };
+  return list.sort(sorters[state.sort]);
+}
+
+/* Scheda */
+function card(p) {
+  const fill = Math.round(((p.cd - 8) / 12) * 100);
+  const isOpen = open.has(p.id);
+  const dadi = (p.dadi || []).map((d, i) =>
+    `<button type="button" class="dice" data-id="${p.id}" data-d="${i}">Tira ${d.e} <small>${d.l}</small></button>`
+  ).join("");
+  const pills = p.effetti.map(e => `<li>${e}</li>`).join("");
+  return `
+  <article class="card${isOpen ? " open" : ""}" data-type="${p.tipo}" data-id="${p.id}">
+    <div class="gauge" aria-hidden="true">
+      <div class="vial"><div class="vial-neck"></div><div class="vial-body"><div class="vial-fill" style="--fill:${fill}%"></div></div></div>
+      <div class="cd"><b>${p.cd}</b><span>CD</span></div>
+    </div>
+    <div>
+      <div class="head">
+        <h2>${p.nome}</h2>
+        <span class="type">${p.tipo}</span>
+      </div>
+      <dl class="facts">
+        <div><dt>Costo</dt><dd>${mo(p.costo)}</dd></div>
+        <div><dt>CD</dt><dd>${p.cd}</dd></div>
+        <div><dt>Durata</dt><dd>${p.durata}</dd></div>
+      </dl>
+      <ul class="pills">${pills}</ul>
+      <p class="desc">${p.desc}</p>
+      <div class="tools">
+        ${dadi}
+        <button type="button" class="toggle" aria-expanded="${isOpen}">${isOpen ? "Nascondi descrizione" : "Mostra descrizione"}</button>
+      </div>
+      <p class="result" aria-live="polite">${results.get(p.id) || ""}</p>
+    </div>
+  </article>`;
+}
+
+function render() {
+  const list = visibili();
+  $list.classList.toggle("compact", state.view === "elenco");
+  if (list.length === 0) {
+    $list.innerHTML = `<div class="empty"><p>Nessun veleno corrisponde alla ricerca.</p><button type="button" id="reset">Azzera filtri</button></div>`;
+  } else {
+    $list.innerHTML = list.map(card).join("");
+  }
+  $status.textContent = list.length === DATA.length
+    ? `${DATA.length} veleni`
+    : `${list.length} di ${DATA.length} veleni`;
+  renderChips();
+}
+
+/* Tiro dei dadi */
+function tira(expr) {
+  const [n, m] = expr.split("d").map(Number);
+  const r = Array.from({ length: n }, () => 1 + Math.floor(Math.random() * m));
+  return { r, sum: r.reduce((a, b) => a + b, 0) };
+}
+
+function gestisciTiro(id, idx) {
+  const p = DATA[id], d = p.dadi[idx];
+  const { r, sum } = tira(d.e);
+  let html;
+  if (d.k === "ore") {
+    html = `<b>${sum} ore</b> di avvelenamento <small>(${d.e}: ${r.join(" + ")})</small>`;
+  } else {
+    html = `<b>${sum} danni</b> da veleno`;
+    if (d.half) html += ` <small>(${Math.floor(sum / 2)} se il TS riesce)</small>`;
+    html += ` <small>(${d.e}: ${r.join(" + ")})</small>`;
+  }
+  results.set(id, html);
+  const el = $list.querySelector(`.card[data-id="${id}"] .result`);
+  if (el) el.innerHTML = html;
+}
+
+/* Eventi */
+$q.addEventListener("input", () => { state.q = $q.value; render(); });
+$q.addEventListener("keydown", e => { if (e.key === "Escape") { $q.value = ""; state.q = ""; render(); } });
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && document.activeElement !== $q && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault(); $q.focus();
+  }
+});
+
+document.getElementById("sort").addEventListener("change", e => { state.sort = e.target.value; render(); });
+
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+  state.view = b.dataset.view;
+  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  render();
+}));
+
+$chips.addEventListener("click", e => {
+  const b = e.target.closest(".chip");
+  if (!b) return;
+  const t = b.dataset.type;
+  if (!t) state.tipi.clear();
+  else if (state.tipi.has(t)) state.tipi.delete(t);
+  else state.tipi.add(t);
+  render();
+});
+
+$list.addEventListener("click", e => {
+  const dice = e.target.closest(".dice");
+  if (dice) { gestisciTiro(Number(dice.dataset.id), Number(dice.dataset.d)); return; }
+  const tog = e.target.closest(".toggle");
+  if (tog) {
+    const card = tog.closest(".card");
+    const id = Number(card.dataset.id);
+    const isOpen = !open.has(id);
+    isOpen ? open.add(id) : open.delete(id);
+    card.classList.toggle("open", isOpen);
+    tog.setAttribute("aria-expanded", String(isOpen));
+    tog.textContent = isOpen ? "Nascondi descrizione" : "Mostra descrizione";
+    return;
+  }
+  if (e.target.closest("#reset")) {
+    state.q = ""; $q.value = ""; state.tipi.clear(); render();
+  }
+});
+
+render();
+// L'animazione delle fiale parte solo al primo caricamento
+setTimeout(() => $list.classList.remove("first"), 1200);
+</script>
+</body>
+</html>

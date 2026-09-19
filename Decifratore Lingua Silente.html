@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lingua Silente – il gergo dei ladri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700;1,400&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --perg: #e7d3a0;
+    --perg-chiara: #f6e9c3;
+    --perg-scura: #c9a466;
+    --inchiostro: #28170b;
+    --seppia: #5b4326;
+    --bordo: #86643a;
+    --sangue: #6b2214;
+    --titolo: 'Uncial Antiqua', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+    --testo: 'Almendra', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--inchiostro);
+    font-family: var(--testo);
+    font-size: 18px;
+    line-height: 1.5;
+    background:
+      radial-gradient(ellipse at 18% 8%, #f3e4b8 0, transparent 55%),
+      radial-gradient(ellipse at 92% 92%, rgba(150, 105, 45, .35) 0, transparent 50%),
+      radial-gradient(ellipse at center, #e7d3a0 0, #d2b070 100%);
+    background-attachment: fixed;
+  }
+
+  /* bordi consumati e grana della carta */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 150px rgba(90, 55, 15, .55);
+    z-index: 0;
+  }
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    opacity: .3;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    z-index: 0;
+  }
+
+  .pagina {
+    position: relative;
+    z-index: 1;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  /* ---------- intestazione ---------- */
+  header { text-align: center; padding-bottom: 1.2rem; border-bottom: 4px double var(--bordo); }
+  h1 {
+    margin: 0;
+    font-family: var(--titolo);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 7vw, 4.6rem);
+    line-height: 1.1;
+    color: var(--inchiostro);
+    text-shadow: 1px 1px 0 rgba(255, 240, 200, .5);
+  }
+  .sotto { margin: .4rem 0 0; font-style: italic; color: var(--seppia); font-size: 1.1rem; }
+
+  /* ---------- schede ---------- */
+  .schede { display: flex; gap: 1.6rem; justify-content: center; align-items: center; flex-wrap: wrap; margin: 1.2rem 0 1.4rem; }
+  .scheda {
+    font: inherit; font-size: 1.25rem; font-weight: 700;
+    background: none; border: 0; border-bottom: 3px solid transparent;
+    color: var(--seppia); padding: .2rem .3rem; cursor: pointer;
+  }
+  .scheda[aria-selected="true"] { color: var(--sangue); border-bottom-color: var(--sangue); }
+  .scheda:hover { color: var(--sangue); }
+  .stampa {
+    font: inherit; font-size: .95rem;
+    background: transparent; color: var(--seppia);
+    border: 1.5px solid var(--bordo); border-radius: 2px;
+    padding: .3rem .8rem; cursor: pointer;
+  }
+  .stampa:hover { background: rgba(255, 246, 215, .45); }
+
+  /* ---------- elementi comuni ---------- */
+  :focus-visible { outline: 3px solid var(--sangue); outline-offset: 2px; }
+
+  .cerca {
+    display: block;
+    width: min(100%, 30rem);
+    margin: 0 auto 1rem;
+    font: inherit;
+    color: var(--inchiostro);
+    padding: .6rem .9rem;
+    background: rgba(255, 248, 225, .55);
+    border: 2px solid var(--bordo);
+    border-radius: 2px;
+  }
+  .cerca::placeholder { color: var(--seppia); opacity: .75; font-style: italic; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin-bottom: 1rem; }
+  .chip, .base {
+    font: inherit; color: var(--inchiostro);
+    background: rgba(255, 246, 215, .35);
+    border: 1.5px solid var(--bordo);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .chip { padding: .25rem .8rem; font-size: 1rem; }
+  .chip:hover:not(:disabled), .base:hover { background: rgba(255, 246, 215, .75); }
+  .chip[aria-pressed="true"], .base[aria-pressed="true"] {
+    background: var(--sangue); color: var(--perg-chiara); border-color: var(--sangue);
+  }
+  .chip:disabled { opacity: .38; cursor: not-allowed; }
+  .chip .n { font-size: .8rem; opacity: .75; margin-left: .3rem; }
+
+  .conta { text-align: center; font-style: italic; color: var(--seppia); margin: 0 0 1rem; min-height: 1.5em; }
+  .vuoto { text-align: center; font-style: italic; color: var(--seppia); padding: 1.5rem 1rem; margin: 0; }
+
+  /* ---------- schede dei segni ---------- */
+  .griglia {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    gap: .9rem 1.2rem;
+  }
+  .segno {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: .9rem;
+    align-items: center;
+    padding: .75rem .9rem;
+    border: 1.5px solid var(--bordo);
+    border-radius: 2px;
+    background: rgba(255, 246, 215, .3);
+  }
+  .glifo {
+    width: 76px; height: 76px;
+    background: rgba(40, 23, 11, .07);
+    border-radius: 2px;
+    color: var(--inchiostro);
+  }
+  .glifo svg { display: block; width: 100%; height: 100%; }
+  .segno h3 { margin: 0; font-size: 1.1rem; line-height: 1.2; font-weight: 700; }
+  .segno .cat { margin: .15rem 0 0; font-size: .88rem; font-style: italic; color: var(--sangue); }
+  .segno .desc { margin: .2rem 0 0; font-size: .9rem; line-height: 1.35; color: var(--seppia); }
+
+  /* ---------- decifra ---------- */
+  .passo { margin-bottom: 1.6rem; }
+  .passo h2 { margin: 0 0 .2rem; font-family: var(--titolo); font-weight: 400; font-size: 1.5rem; text-align: center; }
+  .passo .aiuto { margin: 0 0 .9rem; text-align: center; font-style: italic; color: var(--seppia); font-size: .98rem; }
+  .basi { display: flex; flex-wrap: wrap; gap: .7rem; justify-content: center; }
+  .base {
+    display: flex; flex-direction: column; align-items: center; gap: .3rem;
+    width: 7.6rem; padding: .6rem .4rem; font-size: .95rem; line-height: 1.2; text-align: center;
+  }
+  .base svg { width: 44px; height: 44px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .azioni { text-align: center; margin: 1rem 0 0; }
+
+  .risultati h2 { margin: 0 0 .2rem; font-family: var(--titolo); font-weight: 400; font-size: 1.5rem; text-align: center; }
+  .simili { margin-top: 1.4rem; }
+  .simili summary { cursor: pointer; text-align: center; font-style: italic; color: var(--seppia); margin-bottom: 1rem; }
+  .simili summary:hover { color: var(--sangue); }
+
+  footer { margin-top: 2.2rem; text-align: center; font-size: .9rem; font-style: italic; color: var(--seppia); }
+
+  @media (max-width: 520px) {
+    body { font-size: 17px; }
+    .pagina { padding: 1.2rem .9rem 2rem; }
+    .griglia { grid-template-columns: 1fr; }
+    .base { width: 6.6rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  /* ---------- stampa: il glossario diventa un handout ---------- */
+  @media print {
+    @page { margin: 1.4cm; }
+    body {
+      background: #f2e6c2 !important;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      font-size: 11.5pt;
+    }
+    body::before, body::after { display: none; }
+    .pagina { padding: 0; max-width: none; }
+    .schede, .strumenti, #pannello-decifra, .no-stampa { display: none !important; }
+    #pannello-glossario[hidden] { display: block !important; }
+    h1 { font-size: 34pt; }
+    .griglia { grid-template-columns: repeat(2, 1fr); gap: .5rem .8rem; }
+    .segno { break-inside: avoid; background: transparent; padding: .5rem .6rem; }
+    .glifo { background: rgba(40, 23, 11, .06); }
+    header { margin-bottom: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="pagina">
+
+  <header>
+    <h1>Lingua Silente</h1>
+    <p class="sotto">Segni di gesso e carbone per chi sa leggere i muri</p>
+  </header>
+
+  <div class="schede" role="tablist" aria-label="Sezioni">
+    <button class="scheda" role="tab" id="tab-glossario" aria-controls="pannello-glossario" aria-selected="true">Glossario</button>
+    <button class="scheda" role="tab" id="tab-decifra" aria-controls="pannello-decifra" aria-selected="false">Decifra un segno</button>
+    <button class="stampa" id="btn-stampa" type="button">Stampa il glossario</button>
+  </div>
+
+  <!-- ================= GLOSSARIO ================= -->
+  <section id="pannello-glossario" role="tabpanel" aria-labelledby="tab-glossario">
+    <div class="strumenti">
+      <input class="cerca" id="cerca" type="search" placeholder="Cerca: guardie, trappole, gilda…" aria-label="Cerca un segno per parola" autocomplete="off">
+      <div class="chips" id="filtri-cat" role="group" aria-label="Filtra per categoria"></div>
+    </div>
+    <p class="conta" id="conta-glossario" aria-live="polite"></p>
+    <div class="griglia" id="griglia-glossario"></div>
+  </section>
+
+  <!-- ================= DECIFRA ================= -->
+  <section id="pannello-decifra" role="tabpanel" aria-labelledby="tab-decifra" hidden>
+    <div class="passo">
+      <h2>La forma di base</h2>
+      <p class="aiuto">Qual è la figura principale del segno? Se non sei sicuro, scegli «Non so».</p>
+      <div class="basi" id="basi" role="group" aria-label="Forma di base"></div>
+    </div>
+
+    <div class="passo">
+      <h2>I dettagli che vedi</h2>
+      <p class="aiuto">Seleziona tutto ciò che noti. I dettagli grigi non esistono in nessun segno compatibile.</p>
+      <div class="chips" id="dettagli" role="group" aria-label="Dettagli del segno"></div>
+      <p class="azioni"><button class="stampa" id="btn-reset" type="button">Ricomincia</button></p>
+    </div>
+
+    <div class="risultati">
+      <h2>Segni possibili</h2>
+      <p class="conta" id="conta-decifra" aria-live="polite"></p>
+      <div class="griglia" id="griglia-esatti"></div>
+      <details class="simili" id="simili" hidden>
+        <summary id="simili-titolo"></summary>
+        <div class="griglia" id="griglia-simili"></div>
+      </details>
+    </div>
+  </section>
+
+  <footer class="no-stampa">Segni ridisegnati a partire dalla tabella della Lingua Silente.</footer>
+</div>
+
+<script>
+/* ================================================================
+   DATI – ogni segno è una riga: id, nome, categoria, forme di base,
+   dettagli, descrizione a parole e disegno SVG (griglia 64×64).
+   Per correggere o aggiungere un segno basta modificare questa lista.
+   ================================================================ */
+const T = '<path d="M32 8 L58 54 H6 Z"/>';                      // triangolo
+const Q = '<rect x="10" y="10" width="44" height="44"/>';        // quadrato
+const C = '<circle cx="32" cy="32" r="22"/>';                    // cerchio
+const dot = (x, y, r = 2.4) => `<circle cx="${x}" cy="${y}" r="${r}" fill="currentColor" stroke="none"/>`;
+
+const CATS = [
+  { id: 'valore',   label: 'Valore' },
+  { id: 'pericolo', label: 'Pericolo' },
+  { id: 'guardie',  label: 'Guardie' },
+  { id: 'gilde',    label: 'Gilde/Persone' },
+  { id: 'percorsi', label: 'Percorsi' },
+  { id: 'luoghi',   label: 'Luoghi' }
+];
+
+const BASI = [
+  { id: 'triangolo', label: 'Triangolo',       icon: '<path d="M32 10 L56 52 H8 Z"/>' },
+  { id: 'quadrato',  label: 'Quadrato',        icon: '<rect x="12" y="12" width="40" height="40"/>' },
+  { id: 'cerchio',   label: 'Cerchio o ovale', icon: '<circle cx="32" cy="32" r="20"/>' },
+  { id: 'linea',     label: 'Linea, arco o X', icon: '<path d="M12 44 Q32 8 52 44"/><path d="M20 54 H44"/>' },
+  { id: 'rombo',     label: 'Rombo',           icon: '<path d="M32 8 L56 32 L32 56 L8 32 Z"/>' },
+  { id: 'any',       label: 'Non so',          icon: '<text x="32" y="46" text-anchor="middle" font-size="42" fill="currentColor" stroke="none" font-family="serif">?</text>' }
+];
+
+const DETTAGLI = [
+  { id: 'punto',      label: 'Punto ●' },
+  { id: 'croce',      label: 'Croce X' },
+  { id: 'barra-v',    label: 'Barre verticali |' },
+  { id: 'barra-o',    label: 'Barre orizzontali —' },
+  { id: 'diagonale',  label: 'Diagonale /' },
+  { id: 'freccia',    label: 'Freccia ↑' },
+  { id: 'cerchietto', label: 'Cerchietto ○' },
+  { id: 'annidata',   label: 'Forma dentro forma ▣' },
+  { id: 'chevron',    label: 'Angolo V, Λ o M' },
+  { id: 'pieno',      label: 'Tratto spesso o pieno ■' },
+  { id: 'ripetuto',   label: 'Elemento ripetuto ▢▢' },
+  { id: 'arco',       label: 'Arco ⌒' }
+];
+
+const mk = (id, nome, cat, bases, dets, desc, svg) => ({ id, nome, cat, bases, dets, desc, svg });
+
+const SEGNI = [
+  /* ---- forme libere: archi, X ---- */
+  mk('oggetti-valore', "Oggetti di valore all'interno", 'valore', ['linea'], ['arco', 'barra-o'],
+     'Arco aperto a destra con una barra orizzontale al centro',
+     '<path d="M40 10 Q18 32 40 54"/><path d="M29 32 H48"/>'),
+  mk('benestante', 'Benestante', 'valore', ['linea'], ['arco', 'barra-o'],
+     'Arco aperto a sinistra con una barra orizzontale al centro',
+     '<path d="M24 10 Q46 32 24 54"/><path d="M35 32 H16"/>'),
+  mk('territorio-gilda', 'Territorio di una gilda', 'gilde', ['linea'], ['arco', 'punto'],
+     'Piccolo arco con un punto sotto',
+     `<path d="M14 36 A18 18 0 0 1 50 36"/>${dot(32, 48)}`),
+  mk('mostri', "Mostri all'interno", 'pericolo', ['linea'], ['croce', 'barra-o'],
+     'X con due piccole barre orizzontali in alto',
+     '<path d="M14 16 L50 52 M50 16 L14 52"/><path d="M14 8 H24 M40 8 H50"/>'),
+  mk('evitare', 'Evitare', 'pericolo', ['linea'], ['croce', 'ripetuto'],
+     'Due X affiancate',
+     '<path d="M6 22 L28 42 M28 22 L6 42 M36 22 L58 42 M58 22 L36 42"/>'),
+  mk('segui-direzione', 'Segui la direzione', 'percorsi', ['linea'], ['freccia', 'chevron'],
+     'Freccia verso l\'alto poggiata su un angolo a Λ',
+     '<path d="M32 8 V42 M19 21 L32 8 L45 21"/><path d="M16 56 L32 44 L48 56"/>'),
+
+  /* ---- cerchi ---- */
+  mk('nessuna-pattuglia', 'Nessuna pattuglia di guardia', 'guardie', ['cerchio'], ['barra-o'],
+     'Cerchio attraversato da una barra orizzontale',
+     `${C}<path d="M10 32 H54"/>`),
+  mk('vale-rubare', 'Se possibile, vale la pena di rubare', 'valore', ['cerchio'], ['diagonale'],
+     'Ovale con una diagonale che lo attraversa e sporge',
+     '<ellipse cx="32" cy="32" rx="16" ry="22"/><path d="M12 52 L52 12"/>'),
+  mk('corrotto', 'Può essere corrotto', 'guardie', ['cerchio'], ['diagonale'],
+     'Cerchio con una diagonale all\'interno',
+     `${C}<path d="M16.5 47.5 L47.5 16.5"/>`),
+  mk('recinto', 'Recinto', 'luoghi', ['cerchio'], ['barra-v', 'ripetuto'],
+     'Ovale con tre barre verticali all\'interno',
+     '<ellipse cx="32" cy="32" rx="16" ry="22"/><path d="M32 10 V54 M24 20 V44 M40 20 V44"/>'),
+  mk('rapina', 'Rapina in programma', 'valore', ['cerchio'], ['barra-v'],
+     'Cerchio con una barra verticale che sporge sopra e sotto',
+     '<circle cx="32" cy="32" r="18"/><path d="M32 6 V58"/>'),
+  mk('protetto-gilda', 'Protetto da una gilda', 'gilde', ['cerchio'], ['croce'],
+     'Cerchio con una X all\'interno',
+     `${C}<path d="M17 17 L47 47 M47 17 L17 47"/>`),
+  mk('casa-dente', 'Casa sicura del Dente Avvelenato', 'gilde', ['cerchio'], ['ripetuto'],
+     'Due cerchi affiancati',
+     '<circle cx="20" cy="32" r="12"/><circle cx="44" cy="32" r="12"/>'),
+  mk('persona-fiducia', "Persona di fiducia all'interno", 'gilde', ['cerchio'], ['ripetuto'],
+     'Tre cerchi affiancati',
+     '<circle cx="13" cy="32" r="9.5"/><circle cx="32" cy="32" r="9.5"/><circle cx="51" cy="32" r="9.5"/>'),
+  mk('protetto-magia', 'Protetto da magia', 'pericolo', ['cerchio', 'triangolo'], ['annidata', 'pieno'],
+     'Cerchio spesso che racchiude un triangolo',
+     '<circle cx="32" cy="32" r="27" stroke-width="5"/><path d="M32 17 L47 45 H17 Z"/>'),
+
+  /* ---- triangoli: abitazioni ---- */
+  mk('territorio-nobilta', 'Territorio della nobiltà', 'luoghi', ['triangolo'], [],
+     'Triangolo semplice, senza segni all\'interno',
+     T),
+  mk('non-fidarti', 'Non fidarti di chi abita qui', 'gilde', ['triangolo'], ['cerchietto', 'punto'],
+     'Triangolo con un cerchietto puntato all\'interno',
+     `${T}<circle cx="32" cy="40" r="6"/>${dot(32, 40, 1.8)}`),
+  mk('saccheggiato', 'Già saccheggiato', 'valore', ['triangolo'], ['croce'],
+     'Triangolo con una X all\'interno',
+     `${T}<path d="M25 37 L39 51 M39 37 L25 51"/>`),
+  mk('nulla-valore', "Nulla di valore all'interno", 'valore', ['triangolo'], ['barra-v', 'ripetuto'],
+     'Triangolo con due barre verticali',
+     `${T}<path d="M25 38 V52 M39 38 V52"/>`),
+  mk('pericolo', "Pericolo all'interno", 'pericolo', ['triangolo'], ['punto', 'ripetuto', 'pieno'],
+     'Triangolo dal tratto spesso con due punti sopra la punta',
+     `<path d="M32 14 L58 56 H6 Z" stroke-width="5"/>${dot(26, 6, 2.7)}${dot(38, 6, 2.7)}`),
+  mk('non-vale-rubare', 'Non vale la pena rubare', 'valore', ['triangolo'], ['annidata', 'punto'],
+     'Triangolo con un quadratino puntato all\'interno',
+     `${T}<rect x="26" y="36" width="12" height="12"/>${dot(32, 42, 1.8)}`),
+  mk('non-corrotto', 'Non può essere corrotto', 'guardie', ['triangolo'], ['diagonale'],
+     'Triangolo con una diagonale all\'interno',
+     `${T}<path d="M23 49 L41 35"/>`),
+  mk('pattuglia', 'Pattuglia di guardia qui', 'guardie', ['triangolo'], ['chevron'],
+     'Triangolo con un segno a M all\'interno',
+     `${T}<path d="M21 50 L27 38 L32 46 L37 38 L43 50"/>`),
+  mk('ben-sorvegliato', 'Ben sorvegliato', 'guardie', ['triangolo'], ['croce', 'ripetuto'],
+     'Triangolo con due X affiancate',
+     `${T}<path d="M22 35 L30 47 M30 35 L22 47 M34 35 L42 47 M42 35 L34 47"/>`),
+  mk('sorvegliato', 'Sorvegliato', 'guardie', ['triangolo'], ['barra-o'],
+     'Triangolo con una piccola barra orizzontale vicino alla punta',
+     `${T}<path d="M27 26 H37"/>`),
+  mk('allontanarsi', 'Allontanarsi velocemente', 'percorsi', ['triangolo'], ['barra-o'],
+     'Triangolo con una barra orizzontale vicino alla base',
+     `${T}<path d="M18 46 H46"/>`),
+  mk('mago', "Mago all'interno", 'pericolo', ['triangolo'], ['cerchietto', 'chevron'],
+     'Triangolo con una figura: cerchietto sopra un angolo a Λ',
+     `${T}<circle cx="32" cy="33" r="3.6"/><path d="M23 52 L32 39 L41 52"/>`),
+  mk('protetto-culto', 'Protetto da un culto', 'gilde', ['triangolo'], ['annidata'],
+     'Triangolo con un secondo triangolo all\'interno',
+     `${T}<path d="M32 28 L45 50 H19 Z"/>`),
+  mk('non-proseguire', 'Non proseguire', 'pericolo', ['triangolo'], ['pieno'],
+     'Triangolo diviso da una barra verticale, metà destra piena',
+     `<path d="M32 8 L58 54 H32 Z" fill="currentColor"/>${T}<path d="M32 8 V54"/>`),
+  mk('trappole', 'Trappole', 'pericolo', ['triangolo'], ['annidata', 'pieno'],
+     'Triangolo con un triangolino pieno rivolto verso il basso',
+     `${T}<path d="M22 34 H42 L32 50 Z" fill="currentColor"/>`),
+
+  /* ---- quadrati: luoghi e percorsi ---- */
+  mk('guardie-avanti', 'Guardie più avanti', 'guardie', ['quadrato'], ['barra-o'],
+     'Quadrato attraversato da una barra orizzontale che sporge ai lati',
+     `${Q}<path d="M4 32 H60"/>`),
+  mk('entrata-alto', "Entrata dall'alto", 'percorsi', ['quadrato'], ['diagonale', 'barra-v'],
+     'Quadrato con una diagonale che sale e sporge in alto con un trattino verticale',
+     `${Q}<path d="M12 52 L46 12 V3"/>`),
+  mk('entrata-basso', 'Entrata dal basso', 'percorsi', ['quadrato'], ['diagonale', 'barra-v'],
+     'Quadrato con una diagonale che scende e sporge in basso con un trattino verticale',
+     `${Q}<path d="M12 12 L46 52 V61"/>`),
+  mk('punto-incontro', "Punto d'incontro", 'luoghi', ['quadrato'], ['ripetuto'],
+     'Due quadrati sovrapposti e sfalsati',
+     '<rect x="8" y="8" width="34" height="34"/><rect x="22" y="22" width="34" height="34"/>'),
+  mk('porta-segreta', 'Porta segreta', 'percorsi', ['quadrato'], ['barra-o', 'ripetuto'],
+     'Quadrato attraversato da due barre orizzontali',
+     `${Q}<path d="M4 25 H60 M4 39 H60"/>`),
+  mk('via-fuga', 'Via di fuga', 'percorsi', ['quadrato'], ['barra-v', 'ripetuto'],
+     'Quadrato attraversato da due barre verticali',
+     `${Q}<path d="M25 4 V60 M39 4 V60"/>`),
+  mk('parola-ordine', "Parola d'ordine", 'gilde', ['quadrato'], ['punto'],
+     'Quadrato con un punto al centro',
+     `${Q}${dot(32, 32, 3)}`),
+  mk('non-entrare', 'Non entrare', 'pericolo', ['quadrato'], ['croce'],
+     'Quadrato con una X da un angolo all\'altro',
+     `${Q}<path d="M10 10 L54 54 M54 10 L10 54"/>`),
+  mk('zona-non-sicura', 'Zona non sicura', 'luoghi', ['quadrato'], ['ripetuto'],
+     'Due quadratini affiancati',
+     '<rect x="5" y="22" width="22" height="22"/><rect x="37" y="22" width="22" height="22"/>'),
+  mk('zona-sicura', 'Zona sicura', 'luoghi', ['quadrato'], ['ripetuto'],
+     'Tre quadratini disposti a piramide',
+     '<rect x="23" y="6" width="18" height="18"/><rect x="6" y="38" width="18" height="18"/><rect x="40" y="38" width="18" height="18"/>'),
+
+  /* ---- rombo ---- */
+  mk('strada-sicura', 'Attuale strada sicura', 'percorsi', ['rombo'], ['chevron'],
+     'Rombo con un angolo a V all\'interno',
+     '<path d="M32 6 L58 32 L32 58 L6 32 Z"/><path d="M21 27 L32 39 L43 27"/>')
+];
+
+/* ================================================================
+   UTILITÀ
+   ================================================================ */
+const $ = (sel) => document.querySelector(sel);
+const catLabel = (id) => CATS.find((c) => c.id === id).label;
+const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/g, ' ');
+// «guardie» e «guardia» diventano entrambe «guard»: la ricerca trova le varianti
+const radice = (w) => (w.length > 4 ? w.replace(/[aeio]+$/, '') : w);
+
+SEGNI.forEach((s) => {
+  s.hay = norm([s.nome, s.desc, catLabel(s.cat), s.bases.join(' ')].join(' '));
+});
+
+function glifo(s) {
+  return `<svg viewBox="0 0 64 64" role="img" aria-label="Simbolo: ${s.nome}">` +
+    `<g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${s.svg}</g></svg>`;
+}
+
+function scheda(s) {
+  return `<article class="segno">
+    <div class="glifo">${glifo(s)}</div>
+    <div class="testo">
+      <h3>${s.nome}</h3>
+      <p class="cat">${catLabel(s.cat)}</p>
+      <p class="desc">${s.desc}</p>
+    </div>
+  </article>`;
+}
+
+/* ================================================================
+   SCHEDE (glossario / decifra)
+   ================================================================ */
+const tabGlossario = $('#tab-glossario');
+const tabDecifra = $('#tab-decifra');
+const pannelloGlossario = $('#pannello-glossario');
+const pannelloDecifra = $('#pannello-decifra');
+
+function apriScheda(nome) {
+  const dec = nome === 'decifra';
+  tabGlossario.setAttribute('aria-selected', String(!dec));
+  tabDecifra.setAttribute('aria-selected', String(dec));
+  pannelloGlossario.hidden = dec;
+  pannelloDecifra.hidden = !dec;
+  $('#btn-stampa').hidden = dec;
+  history.replaceState(null, '', dec ? '#decifra' : '#glossario');
+}
+tabGlossario.addEventListener('click', () => apriScheda('glossario'));
+tabDecifra.addEventListener('click', () => apriScheda('decifra'));
+$('#btn-stampa').addEventListener('click', () => window.print());
+
+/* ================================================================
+   GLOSSARIO
+   ================================================================ */
+const statoG = { q: '', cat: 'tutti' };
+
+function creaFiltriCategoria() {
+  const box = $('#filtri-cat');
+  const voci = [{ id: 'tutti', label: 'Tutte' }, ...CATS];
+  box.innerHTML = voci
+    .map((c) => `<button type="button" class="chip" data-cat="${c.id}" aria-pressed="${c.id === 'tutti'}">${c.label}</button>`)
+    .join('');
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-cat]');
+    if (!b) return;
+    statoG.cat = b.dataset.cat;
+    box.querySelectorAll('[data-cat]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    renderGlossario();
+  });
+}
+
+function renderGlossario() {
+  const parole = norm(statoG.q).split(/\s+/).filter(Boolean).map(radice);
+  const ordine = (s) => CATS.findIndex((c) => c.id === s.cat);
+  const lista = SEGNI
+    .filter((s) => statoG.cat === 'tutti' || s.cat === statoG.cat)
+    .filter((s) => parole.every((p) => s.hay.includes(p)))
+    .sort((a, b) => ordine(a) - ordine(b));
+
+  const griglia = $('#griglia-glossario');
+  if (lista.length === 0) {
+    griglia.innerHTML = '<p class="vuoto">Nessun segno corrisponde. Prova con un\'altra parola o togli il filtro di categoria.</p>';
+  } else {
+    griglia.innerHTML = lista.map(scheda).join('');
+  }
+  $('#conta-glossario').textContent = `${lista.length} ${lista.length === 1 ? 'segno' : 'segni'} su ${SEGNI.length}`;
+}
+
+$('#cerca').addEventListener('input', (e) => { statoG.q = e.target.value; renderGlossario(); });
+
+/* ================================================================
+   DECIFRA
+   ================================================================ */
+const statoD = { base: null, dets: new Set() };
+
+function creaBottoniDecifra() {
+  $('#basi').innerHTML = BASI.map((b) =>
+    `<button type="button" class="base" data-base="${b.id}" aria-pressed="false">` +
+    `<svg viewBox="0 0 64 64" aria-hidden="true">${b.icon}</svg><span>${b.label}</span></button>`
+  ).join('');
+
+  $('#dettagli').innerHTML = DETTAGLI.map((d) =>
+    `<button type="button" class="chip" data-det="${d.id}" aria-pressed="false">${d.label}<span class="n"></span></button>`
+  ).join('');
+
+  $('#basi').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-base]');
+    if (!b) return;
+    // un secondo clic sulla stessa forma la deseleziona
+    statoD.base = statoD.base === b.dataset.base ? null : b.dataset.base;
+    aggiornaDecifra();
+  });
+
+  $('#dettagli').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-det]');
+    if (!b || b.disabled) return;
+    const id = b.dataset.det;
+    if (statoD.dets.has(id)) statoD.dets.delete(id); else statoD.dets.add(id);
+    aggiornaDecifra();
+  });
+
+  $('#btn-reset').addEventListener('click', () => {
+    statoD.base = null;
+    statoD.dets.clear();
+    aggiornaDecifra();
+  });
+}
+
+function aggiornaDecifra() {
+  const { base, dets } = statoD;
+  const scelti = [...dets];
+
+  // segni compatibili con la forma di base scelta
+  const insieme = SEGNI.filter((s) => !base || base === 'any' || s.bases.includes(base));
+
+  // stato dei pulsanti forma
+  document.querySelectorAll('[data-base]').forEach((b) =>
+    b.setAttribute('aria-pressed', String(b.dataset.base === base)));
+
+  // stato dei pulsanti dettaglio: quanti segni resterebbero aggiungendolo
+  document.querySelectorAll('[data-det]').forEach((b) => {
+    const id = b.dataset.det;
+    const scelto = dets.has(id);
+    const n = insieme.filter((s) => [...new Set([...scelti, id])].every((d) => s.dets.includes(d))).length;
+    b.setAttribute('aria-pressed', String(scelto));
+    b.disabled = !scelto && n === 0;
+    b.querySelector('.n').textContent = `(${n})`;
+  });
+
+  const esatti = insieme.filter((s) => scelti.every((d) => s.dets.includes(d)));
+  const simili = scelti.length === 0 ? [] : insieme
+    .filter((s) => !esatti.includes(s))
+    .map((s) => ({ s, k: scelti.filter((d) => s.dets.includes(d)).length }))
+    .filter((x) => x.k > 0)
+    .sort((a, b) => b.k - a.k)
+    .map((x) => x.s);
+
+  const griglia = $('#griglia-esatti');
+  const conta = $('#conta-decifra');
+  const box = $('#simili');
+
+  if (base === null && scelti.length === 0) {
+    conta.textContent = '';
+    griglia.innerHTML = '<p class="vuoto">Scegli la forma che vedi sul muro, poi aggiungi i dettagli: i segni possibili compariranno qui.</p>';
+    box.hidden = true;
+    return;
+  }
+
+  conta.textContent = `${esatti.length} ${esatti.length === 1 ? 'segno possibile' : 'segni possibili'}`;
+  griglia.innerHTML = esatti.length
+    ? esatti.map(scheda).join('')
+    : '<p class="vuoto">Nessun segno ha tutti questi dettagli. Togline qualcuno oppure guarda i segni simili qui sotto.</p>';
+
+  if (simili.length) {
+    box.hidden = false;
+    $('#simili-titolo').textContent = `Somigliano, ma non hanno tutti i dettagli (${simili.length})`;
+    $('#griglia-simili').innerHTML = simili.map(scheda).join('');
+  } else {
+    box.hidden = true;
+  }
+}
+
+/* ================================================================
+   AVVIO
+   ================================================================ */
+creaFiltriCategoria();
+renderGlossario();
+creaBottoniDecifra();
+aggiornaDecifra();
+if (location.hash === '#decifra') apriScheda('decifra');
+</script>
+</body>
+</html>
